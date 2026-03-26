@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cousin Palooza 🎉 — Age Check</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F4C430;
+    --dark: #111;
+    --card: #1a1a1a;
+    --border: #2e2e2e;
+    --text: #f0f0f0;
+    --muted: #888;
+    --adult: #4ade80;
+    --kid: #60a5fa;
+    --free: #f472b6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header {
+    background: linear-gradient(135deg, #1a1200 0%, #111 60%);
+    border-bottom: 3px solid var(--gold);
+    padding: 28px 20px 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.2rem, 8vw, 3.5rem);
+    letter-spacing: 3px;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 6px;
+  }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.adult { background: var(--adult); }
+  .dot.kid { background: var(--kid); }
+  .dot.free { background: var(--free); }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 24px 16px; }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .group-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .group-card.complete { border-color: #2a4a2a; }
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+  }
+
+  .group-header:hover { background: #222; }
+
+  .group-name {
+    font-weight: 600;
+    font-size: 1rem;
+    flex: 1;
+  }
+
+  .group-status {
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .group-status.done { color: var(--adult); }
+
+  .chevron {
+    width: 20px; height: 20px;
+    transition: transform 0.25s;
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  .group-card.open .chevron { transform: rotate(180deg); }
+
+  .group-body {
+    display: none;
+    padding: 0 14px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .group-card.open .group-body { display: block; }
+
+  .person-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #1e1e1e;
+    gap: 10px;
+  }
+
+  .person-row:last-child { border-bottom: none; }
+
+  .person-name {
+    font-size: 0.9rem;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .person-name small {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .age-selector {
+    display: flex;
+    gap: 6px;
+  }
+
+  .age-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #2a2a2a;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .age-btn:hover { opacity: 0.85; }
+
+  .age-btn.selected-adult { background: var(--adult); color: #000; }
+  .age-btn.selected-kid { background: var(--kid); color: #000; }
+  .age-btn.selected-free { background: var(--free); color: #000; }
+
+  .sticky-total {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #151515;
+    border-top: 2px solid var(--gold);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    z-index: 200;
+  }
+
+  .total-item {
+    text-align: center;
+  }
+
+  .total-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .total-num.adult { color: var(--adult); }
+  .total-num.kid { color: var(--kid); }
+  .total-num.free { color: var(--free); }
+  .total-num.money { color: var(--gold); }
+
+  .total-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .divider { width: 1px; background: var(--border); }
+
+  .action-area {
+    margin: 30px 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .done-btn {
+    display: block;
+    background: var(--gold);
+    color: #000;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .done-btn:hover { opacity: 0.85; }
+  .done-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .warning-msg {
+    font-size: 0.78rem;
+    color: #f97316;
+    text-align: center;
+    display: none;
+  }
+
+  .success-msg {
+    font-size: 0.85rem;
+    color: var(--adult);
+    text-align: center;
+    display: none;
+    line-height: 1.5;
+  }
+
+  .output-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 0.78rem;
+    color: var(--text);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    margin-top: 12px;
+    display: none;
+    font-family: monospace;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px 0 0;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  @media (max-width: 400px) {
+    .age-btn { padding: 5px 7px; font-size: 0.68rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎉 Cousin Palooza</h1>
+  <p>July 11, 2025 · Washington, DC · Select age category for each person</p>
+  <div class="legend">
+    <span class="legend-item"><span class="dot adult"></span> Adult 18+ · $100</span>
+    <span class="legend-item"><span class="dot kid"></span> Kid 5–17 · $65</span>
+    <span class="legend-item"><span class="dot free"></span> 4 & Under · FREE</span>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+</header>
+
+<div class="container" id="app"></div>
+
+<div class="sticky-total">
+  <div class="total-item">
+    <div class="total-num adult" id="totalAdults">0</div>
+    <div class="total-label">Adults</div>
+  </div>
+  <div class="divider"></div>
+  <div class="total-item">
+    <div class="total-num kid" id="totalKids">0</div>
+    <div class="total-label">Kids</div>
+  </div>
+  <div class="divider"></div>
+  <div class="total-item">
+    <div class="total-num free" id="totalFree">0</div>
+    <div class="total-label">Free</div>
+  </div>
+  <div class="divider"></div>
+  <div class="total-item">
+    <div class="total-num money" id="totalMoney">$0</div>
+    <div class="total-label">Total Due</div>
+  </div>
+</div>
+
+<script>
+const groups = [
+  { primary: "Riq", members: ["Riq", "KaTina Williams"] },
+  { primary: "Antwoin Roper", members: ["Antwoin Roper"] },
+  { primary: "Ranette", members: ["Ranette", "Al"] },
+  { primary: "Shalverri", members: ["Shalverri"] },
+  { primary: "Patrick Robinson", members: ["Patrick Robinson", "Shontay Robinson", "Patrick Robinson (child)"] },
+  { primary: "Will", members: ["Will", "Deirdre", "Sabien"] },
+  { primary: "Khalil", members: ["Khalil"] },
+  { primary: "Raina Pritchard", members: ["Raina Pritchard", "William Pritchard", "Islynd Pritchard", "Rayne Pritchard", "Oshyn Pritchard", "Wynter Pritchard"] },
+  { primary: "Indi", members: ["Indi", "Rosie", "Cora", "Corine"] },
+  { primary: "A'Zahnay", members: ["A'Zahnay"] },
+  { primary: "Dorian", members: ["Dorian", "Amari", "A'Zanay", "Brielle", "Breon", "Braxton"] },
+  { primary: "Priscilla Scott", members: ["Priscilla Scott"] },
+  { primary: "Rambo", members: ["Rambo"] },
+  { primary: "Orielle", members: ["Orielle", "Mulan"] },
+  { primary: "Kiyara", members: ["Kiyara", "Ziggy", "Miya"] },
+  { primary: "Tacuma", members: ["Tacuma"] },
+  { primary: "Jasmin Lane", members: ["Jasmin Lane", "Justin"] },
+  { primary: "Mattie", members: ["Mattie", "Yanni", "Averi"] },
+  { primary: "Shique", members: ["Shique"] },
+  { primary: "Rosa Scott", members: ["Rosa Scott"] },
+  { primary: "Takeya", members: ["Takeya", "Jamel", "April", "Aaron", "Jassir"] },
+  { primary: "Tarika", members: ["Tarika", "Javeah Chamblee", "Tylik Johnson", "Sanaa Johnson", "Makayla Johnson", "Stephen Quintero"] },
+  { primary: "Sazja", members: ["Sazja"] },
+  { primary: "Ky'ell", members: ["Ky'ell", "Madelyn Corto"] },
+  { primary: "Jay Dubb", members: ["Jay Dubb", "Ebony", "Dominique"] },
+];
+
+const maybeGroups = [
+  { primary: "Altravise Buskey", members: ["Altravise Buskey", "Richard Buskey", "Tijuan Rock", "Ryemes Buskey", "Kim Rock"] },
+  { primary: "Trice R", members: ["Trice R"] },
+  { primary: "Tae", members: ["Tae", "Sekai"] },
+  { primary: "Ilyasah", members: ["Ilyasah"] },
+  { primary: "Jabari", members: ["Jabari", "Karina Guerna", "Jabari Jr"] },
+];
+
+// State: personKey -> 'adult' | 'kid' | 'free' | null
+const state = {};
+
+function personKey(groupIdx, memberIdx) {
+  return `${groupIdx}-${memberIdx}`;
+}
+
+function renderGroups(groups, startIdx, container) {
+  groups.forEach((group, gi) => {
+    const gIdx = startIdx + gi;
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.id = `group-${gIdx}`;
+
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <div class="group-name">${group.primary}</div>
+      <div class="group-status" id="status-${gIdx}">${group.members.length} person${group.members.length > 1 ? 's' : ''}</div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'group-body';
+
+    group.members.forEach((name, mi) => {
+      const key = personKey(gIdx, mi);
+      state[key] = null;
+
+      const row = document.createElement('div');
+      row.className = 'person-row';
+
+      const isGuest = mi > 0;
+      row.innerHTML = `
+        <div class="person-name">
+          ${name}
+          ${isGuest ? '<small>Guest</small>' : '<small>Primary</small>'}
+        </div>
+        <div class="age-selector">
+          <button class="age-btn" data-key="${key}" data-type="adult" onclick="selectAge('${key}','adult',${gIdx})">18+<br>$100</button>
+          <button class="age-btn" data-key="${key}" data-type="kid" onclick="selectAge('${key}','kid',${gIdx})">5–17<br>$65</button>
+          <button class="age-btn" data-key="${key}" data-type="free" onclick="selectAge('${key}','free',${gIdx})">4&amp;under<br>FREE</button>
+        </div>
+      `;
+      body.appendChild(row);
+    });
+
+    card.appendChild(header);
+    card.appendChild(body);
+    container.appendChild(card);
+
+    header.addEventListener('click', () => toggleCard(card));
+  });
+}
+
+function toggleCard(card) {
+  const isOpen = card.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.group-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+
+function selectAge(key, type, gIdx) {
+  state[key] = type;
+
+  // Update button styles
+  document.querySelectorAll(`[data-key="${key}"]`).forEach(btn => {
+    btn.classList.remove('selected-adult', 'selected-kid', 'selected-free');
+    if (btn.dataset.type === type) {
+      btn.classList.add(`selected-${type}`);
+    }
+  });
+
+  updateGroupStatus(gIdx);
+  updateTotals();
+}
+
+function updateGroupStatus(gIdx) {
+  // Find all keys for this group
+  const keys = Object.keys(state).filter(k => k.startsWith(`${gIdx}-`));
+  const filled = keys.filter(k => state[k] !== null).length;
+  const total = keys.length;
+  const statusEl = document.getElementById(`status-${gIdx}`);
+  const card = document.getElementById(`group-${gIdx}`);
+  if (filled === total) {
+    statusEl.textContent = '✓ Done';
+    statusEl.classList.add('done');
+    card.classList.add('complete');
+  } else {
+    statusEl.textContent = `${filled}/${total} selected`;
+    statusEl.classList.remove('done');
+    card.classList.remove('complete');
+  }
+}
+
+function updateTotals() {
+  let adults = 0, kids = 0, free = 0;
+  Object.values(state).forEach(v => {
+    if (v === 'adult') adults++;
+    else if (v === 'kid') kids++;
+    else if (v === 'free') free++;
+  });
+
+  document.getElementById('totalAdults').textContent = adults;
+  document.getElementById('totalKids').textContent = kids;
+  document.getElementById('totalFree').textContent = free;
+  const total = adults * 100 + kids * 65;
+  document.getElementById('totalMoney').textContent = '$' + total.toLocaleString();
+
+  // Progress
+  const filled = Object.values(state).filter(v => v !== null).length;
+  const total2 = Object.keys(state).length;
+  document.getElementById('progressBar').style.width = (filled / total2 * 100) + '%';
+}
+
+function generateSummary() {
+  const allGroups = [...groups, ...maybeGroups];
+  const startIdxMaybe = groups.length;
+  let lines = ['COUSIN PALOOZA — July 11 Age Summary\n'];
+  let adults = 0, kids = 0, free = 0;
+
+  allGroups.forEach((group, gi) => {
+    const gIdx = gi < groups.length ? gi : startIdxMaybe + (gi - groups.length);
+    const keys = Object.keys(state).filter(k => k.startsWith(`${gIdx}-`));
+    const anyFilled = keys.some(k => state[k] !== null);
+    if (!anyFilled) return;
+
+    lines.push(`📋 ${group.primary}'s Group:`);
+    group.members.forEach((name, mi) => {
+      const key = personKey(gIdx, mi);
+      const v = state[key];
+      const label = v === 'adult' ? '18+ ($100)' : v === 'kid' ? '5-17 ($65)' : v === 'free' ? '4&under (FREE)' : '—';
+      if (v === 'adult') adults++;
+      else if (v === 'kid') kids++;
+      else if (v === 'free') free++;
+      lines.push(`  • ${name}: ${label}`);
+    });
+    lines.push('');
+  });
+
+  lines.push(`TOTALS:`);
+  lines.push(`Adults (18+): ${adults} × $100 = $${adults * 100}`);
+  lines.push(`Kids (5-17): ${kids} × $65 = $${kids * 65}`);
+  lines.push(`Free (4&under): ${free}`);
+  lines.push(`TOTAL DUE: $${adults * 100 + kids * 65}`);
+
+  return lines.join('\n');
+}
+
+// Build DOM
+const app = document.getElementById('app');
+
+const goingLabel = document.createElement('div');
+goingLabel.className = 'section-label';
+goingLabel.textContent = '✅ GOING (62)';
+app.appendChild(goingLabel);
+renderGroups(groups, 0, app);
+
+const maybeLabel = document.createElement('div');
+maybeLabel.className = 'section-label';
+maybeLabel.textContent = '🤔 MAYBE (12)';
+app.appendChild(maybeLabel);
+renderGroups(maybeGroups, groups.length, app);
+
+// Action area
+const actionArea = document.createElement('div');
+actionArea.className = 'action-area';
+
+const warningMsg = document.createElement('div');
+warningMsg.className = 'warning-msg';
+warningMsg.id = 'warningMsg';
+warningMsg.textContent = '⚠️ Please select an age category for everyone in your group first.';
+
+const doneBtn = document.createElement('button');
+doneBtn.className = 'done-btn';
+doneBtn.textContent = "🎉 I'm Done!";
+
+const successMsg = document.createElement('div');
+successMsg.className = 'success-msg';
+successMsg.id = 'successMsg';
+
+const outputBox = document.createElement('pre');
+outputBox.className = 'output-box';
+outputBox.id = 'outputBox';
+
+actionArea.appendChild(warningMsg);
+actionArea.appendChild(doneBtn);
+actionArea.appendChild(successMsg);
+actionArea.appendChild(outputBox);
+app.appendChild(actionArea);
+
+doneBtn.addEventListener('click', () => {
+  // Check if at least one person has been categorized
+  const filled = Object.values(state).filter(v => v !== null).length;
+  if (filled === 0) {
+    warningMsg.textContent = '⚠️ Please select an age category for everyone in your group first.';
+    warningMsg.style.display = 'block';
+    return;
+  }
+
+  // Check for any partially-filled groups
+  const allGroups2 = [...groups, ...maybeGroups];
+  let incomplete = [];
+  allGroups2.forEach((group, gi) => {
+    const gIdx = gi < groups.length ? gi : groups.length + (gi - groups.length);
+    const keys = Object.keys(state).filter(k => k.startsWith(`${gIdx}-`));
+    const anyFilled = keys.some(k => state[k] !== null);
+    const allFilled = keys.every(k => state[k] !== null);
+    if (anyFilled && !allFilled) incomplete.push(group.primary);
+  });
+
+  if (incomplete.length > 0) {
+    warningMsg.textContent = `⚠️ Some groups aren't fully filled out: ${incomplete.join(', ')}`;
+    warningMsg.style.display = 'block';
+    return;
+  }
+
+  warningMsg.style.display = 'none';
+
+  const summary = generateSummary();
+  outputBox.textContent = summary;
+  outputBox.style.display = 'block';
+
+  // Build mailto link
+  const subject = encodeURIComponent('Cousin Palooza — Age Info Submitted');
+  const body = encodeURIComponent(summary);
+  const mailto = `mailto:richofftechllc@gmail.com?subject=${subject}&body=${body}`;
+
+  doneBtn.textContent = '✅ Opening Email...';
+  doneBtn.disabled = true;
+
+  window.location.href = mailto;
+
+  successMsg.innerHTML = `Your info is ready! ✉️<br>If your email didn't open, copy the summary below and send it manually.`;
+  successMsg.style.display = 'block';
+
+  setTimeout(() => {
+    doneBtn.textContent = "🎉 I'm Done!";
+    doneBtn.disabled = false;
+  }, 3000);
+});
+</script>
+</body>
+</html>
